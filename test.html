@@ -1,0 +1,84 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+
+<script id="DC_baseScript">if(navigator.userAgent.indexOf('AppleWebKit/') == -1) document.write('<base href="' + location.protocol + '//' + location.host + location.pathname.replace(/\/[^\/]*$/, '/mobile/') + '"/>')</script>
+
+<meta charset="utf-8"/>
+<meta name="robots" content="noindex"/>
+<meta name="viewport" content="target-densitydpi=device-dpi, minimum-scale=1.0, maximum-scale=1, width=device-width-40, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+<title>Test</title>
+
+<script src="http://code.jquery.com/jquery-1.5.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.0a3/jquery.mobile-1.0a3.min.js"></script>
+<script type="text/javascript" src="http://dl.dropbox.com/u/912643/interaction/support/BrowserDetect.js"></script>
+<script type="text/javascript" src="http://dl.dropbox.com/u/912643/interaction/support/Interaction.js"></script>
+<script type="text/javascript" src="http://dl.dropbox.com/u/912643/interaction/test.js"></script>
+
+<script type="text/javascript">
+// Debug
+var debugMsgAppend = window.debugMsgAppend = function(message) {
+	$("#debug").append(message);
+	$("#debug").fadeIn("1000");
+};
+
+var debugMsgRefresh = window.debugMsgRefresh = function(message) {
+	$("#debug").text("Debug Message: " + message);
+	$("#debug").fadeIn("1000");
+};
+
+window.onerror = function(msg, url, line){
+	if(onerror.num++ < onerror.max) {
+		alert("Error: " + msg + "\n" + url + ":" + line);
+		return true;
+	}
+}
+onerror.max = 3;
+onerror.num = 0;
+
+</script>
+
+<!--[if IE]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+
+</head>
+
+<body>
+<h1 id="title" hidden>Test Interaction</h1>
+
+<div align="center">
+
+<p><input type="text" id="textid"></input></p>
+
+<p><canvas id="canvasElem" width="300" height="300"></canvas></p>
+
+<p><input type="button" id="sclick" value="Single Click"></p>
+<p><input type="button" id="dclick" value="Double Click"></p>
+<p><input type="button" id="lclick" value="Long Press"></p>
+
+<h5 id="debug">Debug Message: </h5>
+
+</div>
+
+<script type="text/javascript">
+	$("#debug").hide();
+	
+	$('#sclick').mseInteraction();
+	$('#dclick').mseInteraction();
+	$('#lclick').mseInteraction();
+	$('#sclick').mseInteraction('addListener', 'click', onclick, true);
+	$('#dclick').mseInteraction('addListener', 'doubleClick', ondclick, true);
+	$('#lclick').mseInteraction('addListener', 'longPress', onlclick, true);
+	
+	$('#canvasElem').mseInteraction();
+	$('#canvasElem').mseInteraction('addListener', 'swipe', swipe, true);
+	
+	$('#canvasElem').mseInteraction('addListener', 'move', draw, true);
+</script>
+
+</body>
+</html>
