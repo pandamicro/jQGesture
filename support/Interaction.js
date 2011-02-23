@@ -91,9 +91,6 @@ var methods = {
 				}
 			}
 		}
-		else {
-			$(this).bind(type+'.mseInteraction', func, tag);
-		}
 	},
 
 };
