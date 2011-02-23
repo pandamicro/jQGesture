@@ -1,6 +1,10 @@
 // Plugin jQuery of Interaction for MSEdition
 // Ref: http://docs.jquery.com/Plugins/Authoring
 
+var os = BrowserDetect.OS;
+var mobile = (os.indexOf("Mobile") >= 0);
+var browser = BrowserDetect.browser; // Chrome/Safari/Firefox/Opera/Explorer
+
 (function( $ ){
 
 var _pressTimer;
@@ -15,36 +19,23 @@ var _listeners;
 var eventsWeb = {
 
 	click			: 'click',
-
 	doubleClick		: 'dblclick',
-	
 	longPress		: 'mousedown mousemove mouseup',
-	
 	move			: 'mousemove',
-	
 	swipe			: 'mousedown mousemove mouseup',
-	
 	gestureSingle	: 'mousedown mousemove mouseup',
-	
-	keyPress		: 'keypress',
-	
-	keyDown			: 'keydown',
-	
-	keyUp			: 'keyup'	
+	keydown			: 'keydown',
+	keypress		: 'keypress',
+	keyup			: 'keyup'
 };
 
 var eventsMobile = {
 
 	click			: 'click',
-
 	doubleClick		: 'click',
-	
 	longPress		: 'taphold',
-	
 	move			: 'touchmove',
-	
 	swipe			: 'touchstart touchmove touchend',
-	
 	gestureSingle	: 'touchstart touchmove touchend'
 };
 
@@ -70,33 +61,38 @@ var methods = {
 		});
 	},
 	
-	addListener : function(type, func, doPreventDefault) {
+	addListener : function(type, func, tag) {
 		if( typeof(type) != 'string' && isNaN(type) )
 			return false;
 			
-		var listeners = $.data( $(this).get(0), 'mselisteners' );
-		
-		// If not existe, define listeners
-		if( !listeners ) {
-			var lis = new Array();
-			listeners = $.data( $(this).get(0), 'mselisteners', lis );
-		}
-		listeners[type] = func;
-		
 		// Events corresponds
 		var evts;
 		if(mobile) evts = eventsMobile;
 		else evts = eventsWeb;
-		
-		// Bind event to delegate function 'analyse'
-		// No need for spercial bind
-		if( !mobile || (mobile && type !== 'move' && type !== 'swipe' && type !== 'gestureSingle') ) 
-			$(this).bind(evts[type]+'.mseInteraction', analyse);
-		else {
-			var arr = evts[type].split(' ');
-			for( var i=0; i < arr.length; i++ ) {
-				$(this).get(0).addEventListener(arr[i], analyse, false);
+			
+		if( evts[type] != null ) {
+			var listeners = $.data( $(this).get(0), 'mselisteners' );
+			
+			// If not existe, define listeners
+			if( !listeners ) {
+				var lis = new Array();
+				listeners = $.data( $(this).get(0), 'mselisteners', lis );
 			}
+			listeners[type] = func;
+			
+			// Bind event to delegate function 'analyse'
+			// No need for spercial bind
+			if( !mobile || (mobile && type !== 'move' && type !== 'swipe' && type !== 'gestureSingle') ) 
+				$(this).bind(evts[type]+'.mseInteraction', analyse);
+			else {
+				var arr = evts[type].split(' ');
+				for( var i=0; i < arr.length; i++ ) {
+					$(this).get(0).addEventListener(arr[i], analyse, false);
+				}
+			}
+		}
+		else {
+			$(this).bind(type+'.mseInteraction', func, tag);
 		}
 	},
 
@@ -115,7 +111,12 @@ function analyse(e) {
 	_listeners = $.data( $(this).get(0), 'mselisteners' );
 	var status = $.data( $(this).get(0), 'mseEvtStatus');
 	
-	var event = new MseGestEvt(e);
+	if(e.type === 'keypress') {
+		var evt = e || window.event;
+		evt.preventDefault();
+		var event = new MseGestEvt(evt);
+	}
+	else var event = new MseGestEvt(e);
 	
 	switch( event.type ) {
 	
@@ -148,7 +149,8 @@ function analyse(e) {
 			event.type = 'doubleClick';
 			_listeners['doubleClick'].call( $(this), event );
 		break;
-		
+	
+// Mouse Events	
 	case 'mousedown' : 
 		gestureStart(e);
 		break;
@@ -171,6 +173,8 @@ function analyse(e) {
 	
 		break;
 		
+	
+// Touch Events for iOS
 	case 'taphold' :
 		if( typeof(_listeners['longPress']) == 'function' ){
 			event.type = 'longPress';
@@ -196,6 +200,17 @@ function analyse(e) {
 	case 'touchend' : 
 		if( e.touches.length === 0 && _currentEvt != null )
 			gestureEnd(e);
+		break;
+		
+		
+// Key Events Handling Generate a common result for all navigators
+// Capable to handle normal key events and alt/shift pressed event(not implemented for ctrl)
+// In Firefox, key 'enter' doesn't function in keypress events
+	case 'keydown' :
+	case 'keyup' :
+	case 'keypress' :
+		if( typeof(_listeners[event.type]) == 'function' )		
+			_listeners[event.type].call( $(this), event );
 		break;
 		
 	}
@@ -326,5 +341,28 @@ function MseGestEvt( e, forAnalyse ) {
 	if(forAnalyse) {
 		this.listX = new Array();
 		this.listY = new Array();
+	}
+	
+	if(e.type === 'keydown' || e.type === 'keyup') {
+		this.keyCode = e.keyCode;
+		this.charCode = e.keyCode;
+		this.altKey = e.altKey;
+		this.ctrlKey = false;
+		this.shiftKey = e.shiftKey;
+	}
+	if(e.type === 'keypress') {
+		this.altKey = e.altKey==null ? false : e.altKey;
+		this.ctrlKey = false;
+		this.shiftKey = e.shiftKey==null ? false : e.shiftKey;
+		
+		if(browser === 'Firefox') {
+			// key 'enter' doesn't function
+			this.keyCode = e.charCode;
+			this.charCode = e.charCode;
+		}
+		else {
+			this.keyCode = e.keyCode;
+			this.charCode = e.keyCode;
+		}
 	}
 }

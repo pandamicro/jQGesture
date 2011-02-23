@@ -78,6 +78,9 @@ onerror.num = 0;
 	$('#canvasElem').mseInteraction('addListener', 'swipe', swipe, true);
 	
 	$('#canvasElem').mseInteraction('addListener', 'move', draw, true);
+	
+	$(document).mseInteraction();
+	$(document).mseInteraction('addListener', 'keydown', keypressed);
 </script>
 
 </body>
