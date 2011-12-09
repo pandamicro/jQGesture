@@ -31,7 +31,7 @@ function draw(e) {
 }
 
 function swipe(e) {
-	$(':text').val(e.type+" "+e.target);
+	$(':text').val(e.type);
 }
 
 function keypressed(e) {
